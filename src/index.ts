@@ -12,6 +12,8 @@ import {
   verifyKeys,
 } from './helpers';
 
+import { OidcClient } from './OidcClient'
+
 const DEFAULT_ROLE_DURATION = 3600; // One hour (seconds)
 const ROLE_SESSION_NAME = 'GitHubActions';
 const REGION_REGEX = /^[a-z0-9-]+$/g;
@@ -122,7 +124,13 @@ export async function run() {
       try {
         webIdentityToken = await retryAndBackoff(
           async () => {
-            return core.getIDToken(audience);
+            // TODO: extract this to action input param:
+            const subjectClaims = [
+              "event_name",
+              "repository_owner",
+              "repo"
+            ];
+            return OidcClient.getIDToken(audience, subjectClaims);
           },
           !disableRetry,
           maxRetries,
